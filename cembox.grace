@@ -1,5 +1,5 @@
 import "objectdraw" as od
-//
+// THE GIVEN BOX CLASS (added myname field and revealmyname method)
 
 method named(name) {
     object {

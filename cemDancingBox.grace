@@ -1,3 +1,4 @@
+// dancingBox class is a subclass of the "cembox" 
 import "cembox" as cembox
 
 class dancingbox (name:String){
@@ -5,9 +6,10 @@ class dancingbox (name:String){
     
     var currentlyPartnered:= false
     var moveCount:= 0;
-    var currentPartner := "empty"
+    var currentPartner
     
-    //Objects CANNOT dance without getting permission from other objects
+    //Objects CANNOT dance without getting "permission" from other objects.They can only be
+    // paired when both objects are available. 
     method AskToDanceWith(candidate){
 
         if (isPartnered ==false) then{ print "{name} is asking {candidate.revealmyname} for a dance"
@@ -24,53 +26,81 @@ class dancingbox (name:String){
             return false;
         }
     }
+    
+    //This method sets up the pairing of the objects
     method danceWith (dancePartner){
-        currentPartner:= dancePartner.revealmyname
+        currentPartner:= dancePartner
         currentlyPartnered:= true
-
-        dancePartner.receivePartner(revealmyname)
+        dancePartner.receivePartner(self)
     }
-
+    
+    //This method checks whether an object is already paired with another
     method isPartnered {
         return currentlyPartnered
     }
-
-    method receivePartner (somename:String) {
+    
+    // Helper method that helps with the pairing up of the objects
+    method receivePartner (somepartner) {
         currentlyPartnered:= true
-        currentPartner:= somename
+        currentPartner:= somepartner
     }
 
-    method MouseRoutine(partner, location:Point){
-        if(currentlyPartnered == true) then {
+    //This method handles the MousePressEvents by helping objects decide which
+    // ... one will be leading the dance. For mouse press events the leader changes
+    //...in ever 8 moves.
+    method MouseRoutine(location:Point){     
+        print "moveCount: {moveCount} remainder: {(moveCount/8)%2}"
+        if((currentlyPartnered == true)&& (((moveCount/8) % 2) ≥ 1)) then {
             moveTo(location)
-            moveCount:= moveCount+1
-            circleAroundMove(partner)
+            circleAroundMove
+            incrementMoveCount
+            currentPartner.incrementMoveCount
         }else{
-            moveCount:= 0
-            currentPartner:= "empty"
-            print "Dance routines cannot be accomplished without a partner"
+            currentPartner.moveTo(location)
+            currentPartner.circleAroundMove
+            currentPartner.incrementMoveCount
+            incrementMoveCount
         }
     }
 
-    method AnimationRoutine(partner){
-        if(currentlyPartnered == true) then {
-            if((moveCount % 100) < 25) then {
-                moveBy(2@4)
-            }elseif {((moveCount % 100) ≥ 25) && ((moveCount % 100) < 50)} then{
-                moveBy(-2@4)
-            } elseif{((moveCount % 100) ≥ 50) && ((moveCount % 100) < 75)} then{
-                moveBy(-2@ -4)
-            }elseif{((moveCount % 100) ≥ 75) && ((moveCount % 100)< 100)} then{ 
-                moveBy(2@ -4)
+    // This method handles the Animation Routine by helping objects decide which
+    //...one will be the leading the dance. For animated dances the leader changes
+    //... in every completion of a diamond shape(100 moves)
+    method AnimationRoutine(changeLeadAt){
+        if((changeLeadAt % 100) == 0) then {
+            if((currentlyPartnered == true) && (((moveCount / changeLeadAt) % 2) > 1)) then {
+                determineNextStep
+                circleAroundMove
+                incrementMoveCount
+                currentPartner.incrementMoveCount
+            }else{
+                currentPartner.determineNextStep
+                currentPartner.circleAroundMove
+                incrementMoveCount
+                currentPartner.incrementMoveCount
             }
-            moveCount:= moveCount+1
-            circleAroundMove(partner)
-        }else{
-            print "Dance routines cannot be accomplished without a partner"
         }
     }
+    
+    //This helper method determines the next step for the leading object (and moves)
+    method determineNextStep{
+        if(((moveCount % 100) < 25)) then {
+            moveBy(2@4) 
+        }elseif {((moveCount % 100) ≥ 25) && ((moveCount % 100) < 50)} then{
+            moveBy(-2@4)  
+        } elseif{((moveCount % 100) ≥ 50) && ((moveCount % 100) < 75)} then{
+            moveBy(-2@ -4) 
+        }elseif{((moveCount % 100) ≥ 75) && ((moveCount % 100)< 100)} then{ 
+            moveBy(2@ -4) 
+        }
+    }
+    
+    method revealMyPartner{
+        print "{revealmyname} my partner is: {currentPartner.revealmyname}"
+    }
 
-    method circleAroundMove(partner){
+    // This method determines the next step for the following object (and moves it)
+    method circleAroundMove{
         var targetx
         var targety
         if ((moveCount % 4) == 0) then {
@@ -86,7 +116,12 @@ class dancingbox (name:String){
             targetx := origin.x-22
             targety := origin.y+22
         }
-        partner.moveTo(targetx@targety)
+        currentPartner.moveTo(targetx@targety)
+    }
+    
+    //increments MoveCount
+    method incrementMoveCount{
+        moveCount:= moveCount+1
     }
 }
 
