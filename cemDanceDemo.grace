@@ -18,25 +18,28 @@ def dancefloor = cemDanceFloor.cemDanceFloor
 Mawr.AskToDanceWith(Tom)
 Tom.AskToDanceWith(Jill)
 Joe.AskToDanceWith(Mawr)
-
-
+Mawr.dropPartner
 var answer := Joe.AskToDanceWith(Jill)
+Mawr.AskToDanceWith(Joe) //too late Mawr!you lost your chance
+print "-----------------------------------------------------------"
 
-Jill.extent := 10@10 
+Jill.extent := 10@10 // to be able to better observe jill vs joe
 
 if (answer == true) then {
     dancefloor.setAndReadyDanceFloor(Joe,Jill)
     dancefloor.leadDancersInFloor(Joe,Jill,225,225)
+    
+    
     var keepLightsOnFor := 0
     
-    // Animated Dance-2 diamond shaped sequence (lead changes after the end of first sequence)
+    // Animated Dance: 2 diamond shaped sequence (lead changes after the end of first sequence)
     dancefloor.animate.while{keepLightsOnFor < 200} pausing (100) do{
-        Joe.AnimationRoutine(100)
+        Joe.initiateCircleDanceAnimation(100)
         keepLightsOnFor := keepLightsOnFor+1 
     }
     
     // MousePress Dance (lead changes in every 8 moves)
     dancefloor.app.onMousePressDo { event ->
-        Joe.MouseRoutine(event.at)
+        Joe.initiateCircleDanceMouse(event.at)
     }    
 }

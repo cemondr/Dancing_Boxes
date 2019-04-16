@@ -13,7 +13,7 @@ method named(name) {
             method visible:=(_) { } 
         }
         var myRect := noRect
-        var myname:= name
+        var myName:= name
 
         method defaultExtent {
             20@20
@@ -52,8 +52,8 @@ method named(name) {
             "a box named {name}"
         }
         
-        method revealmyname{
-            return myname
+        method revealMyName{
+            return myName
         }
     }
 }

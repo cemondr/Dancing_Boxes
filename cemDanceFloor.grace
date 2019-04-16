@@ -1,4 +1,5 @@
-//DanceFloor class creates a dancefloor object. 
+//DanceFloor class creates a dancefloor object that is tasked with initializing
+// the graphics and object placement on canvas.
 
 import "cembox" as cembox
 import "cemDancingBox" as cemDancingBox
@@ -15,6 +16,7 @@ class cemDanceFloor{
     method setAndReadyDanceFloor(dancer1,dancer2){
         dancer1.showOn(app.canvas)
         dancer2.showOn(app.canvas)
+        print "Ladies and Gentlemen: {dancer1.revealMyName} and {dancer2.revealMyName}!"
     }
     
     //Puts the dancingboxes at a particular spot in the canvas
@@ -22,5 +24,7 @@ class cemDanceFloor{
         dancer1.moveTo(pointx@pointy)
         dancer2.moveTo(pointx@pointy)
     }
+    
+    
     
 }

@@ -1,24 +1,29 @@
-// dancingBox class is a subclass of the "cembox" 
+// dancingBox class is a subclass of the "cembox". Objects of this class need to be
+// paired with another object of the same class before they can start a dance routine.
+// In order to pair, they need to AskToDanceWith, and their requests are only accepted
+// if the asked object is not already partnered. 
 import "cembox" as cembox
+import "cemDanceRepertoire" as dr
 
 class dancingbox (name:String){
     inherit cembox.named(name)
     
     var currentlyPartnered:= false
     var moveCount:= 0;
-    var currentPartner
+    var currentPartner := "N/A"
+    var repertoire := dr.danceRepertoire
     
     //Objects CANNOT dance without getting "permission" from other objects.They can only be
     // paired when both objects are available. 
     method AskToDanceWith(candidate){
 
-        if (isPartnered ==false) then{ print "{name} is asking {candidate.revealmyname} for a dance"
+        if (isPartnered ==false) then{ print "{name} is asking {candidate.revealMyName} for a dance"
             if(candidate.isPartnered == false) then {
-                print "{candidate.revealmyname} accepted {name}'s request"
+                print "{name} and {candidate.revealMyName} are now partnered "
                 danceWith(candidate)
                 return true;
             }else{
-                print "{candidate.revealmyname} is already partnered"
+                print "{candidate.revealMyName} is already partnered"
                 return false;
             }
         }else{
@@ -27,7 +32,8 @@ class dancingbox (name:String){
         }
     }
     
-    //This method sets up the pairing of the objects
+    //This method sets up the pairing of the objects. It is only called from 'AskToDanceWith'
+    // ...method and only if the asked object is currently partner-free
     method danceWith (dancePartner){
         currentPartner:= dancePartner
         currentlyPartnered:= true
@@ -39,51 +45,31 @@ class dancingbox (name:String){
         return currentlyPartnered
     }
     
-    // Helper method that helps with the pairing up of the objects
+    // Helper method that helps with the pairing up of the objects. Used only when 
+    // ..the object is asked for a dance by another object.
     method receivePartner (somepartner) {
         currentlyPartnered:= true
         currentPartner:= somepartner
     }
-
-    //This method handles the MousePressEvents by helping objects decide which
-    // ... one will be leading the dance. For mouse press events the leader changes
-    //...in ever 8 moves.
-    method MouseRoutine(location:Point){     
-        print "moveCount: {moveCount} remainder: {(moveCount/8)%2}"
-        if((currentlyPartnered == true)&& (((moveCount/8) % 2) ≥ 1)) then {
-            moveTo(location)
-            circleAroundMove
-            incrementMoveCount
-            currentPartner.incrementMoveCount
-        }else{
-            currentPartner.moveTo(location)
-            currentPartner.circleAroundMove
-            currentPartner.incrementMoveCount
-            incrementMoveCount
-        }
-    }
-
-    // This method handles the Animation Routine by helping objects decide which
-    //...one will be the leading the dance. For animated dances the leader changes
-    //... in every completion of a diamond shape(100 moves)
-    method AnimationRoutine(changeLeadAt){
-        if((changeLeadAt % 100) == 0) then {
-            if((currentlyPartnered == true) && (((moveCount / changeLeadAt) % 2) > 1)) then {
-                determineNextStep
-                circleAroundMove
-                incrementMoveCount
-                currentPartner.incrementMoveCount
-            }else{
-                currentPartner.determineNextStep
-                currentPartner.circleAroundMove
-                incrementMoveCount
-                currentPartner.incrementMoveCount
-            }
-        }
+    
+    // Drops the current partner (dropping side)
+    method dropPartner{
+        
+        print "{name} and {currentPartner.revealMyName} are now DEPARTNERED!"
+        currentPartner.dePartner
+        currentlyPartnered := false
+        currentPartner:= "N/A"
     }
     
-    //This helper method determines the next step for the leading object (and moves)
-    method determineNextStep{
+    // Drops the current partner (dropped side)
+    method dePartner{
+        currentPartner:= "N/A"
+        currentlyPartnered := false;    
+    }
+    
+    //This helper method determines the next step for the "leading dancing object"...
+    //... and moves it.
+    method leaderMove{
         if(((moveCount % 100) < 25)) then {
             moveBy(2@4) 
         }elseif {((moveCount % 100) ≥ 25) && ((moveCount % 100) < 50)} then{
@@ -95,28 +81,50 @@ class dancingbox (name:String){
         }
     }
     
+    // reveals the current Partner the dancing object paired with
     method revealMyPartner{
-        print "{revealmyname} my partner is: {currentPartner.revealmyname}"
+        print "{revealMyName} my partner is: {currentPartner.revealMyname}"
     }
 
-    // This method determines the next step for the following object (and moves it)
-    method circleAroundMove{
+    // This method indirectly determines the next step(with a helper method) for the 
+    //"following dancing object" and..moves it according to the "leading dancing object"
+    method followerCircleAroundMove(leader){
+        var tPoint:= followerCircleAroundDetermine(leader)
+        moveTo(tPoint)
+    }
+    
+    // helper method that determines the next step for the "following dancing object"
+    method followerCircleAroundDetermine(leader){
         var targetx
         var targety
+        var tPoint
         if ((moveCount % 4) == 0) then {
-            targetx := origin.x+22
-            targety := origin.y+22
+            targetx := leader.origin.x+22
+            targety := leader.origin.y+22
         } elseif {(moveCount % 4) == 1} then {
-            targetx := origin.x+22
-            targety := origin.y-22
+            targetx := leader.origin.x+22
+            targety := leader.origin.y-22
         } elseif {(moveCount % 4) ==2} then{
-            targetx := origin.x-22
-            targety := origin.y-22
+            targetx := leader.origin.x-22
+            targety := leader.origin.y-22
         }elseif {(moveCount % 4) == 3} then {
-            targetx := origin.x-22
-            targety := origin.y+22
+            targetx := leader.origin.x-22
+            targety := leader.origin.y+22
         }
-        currentPartner.moveTo(targetx@targety)
+        tPoint:= targetx@targety
+        return tPoint
+    }
+    
+    //This method initiates the Animation of the Circle Dance by selecting it..
+    //..from the repertoire
+    method initiateCircleDanceAnimation(changeLeadAt){
+        repertoire.circleDanceAnimationRoutine(self,currentPartner,changeLeadAt)
+    }
+    
+    //This method initiates the Mouse Press Circle Dance by selecting it from ...
+    //..the repertoire.
+    method initiateCircleDanceMouse(location:Point){
+        repertoire.circleDanceMouseRoutine(location,self,currentPartner)
     }
     
     //increments MoveCount
@@ -124,4 +132,3 @@ class dancingbox (name:String){
         moveCount:= moveCount+1
     }
 }
-
